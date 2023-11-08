@@ -1,0 +1,345 @@
+---
+title: "Result"
+shorttitle        : "Effort Result"
+author: 
+  - name          : "Amber X. Chen"
+    affiliation   : "1"
+authornote: |
+  Add complete correspondence information here.
+
+abstract: |
+  This is an abstract.
+
+keywords          : "keywords, go, here"
+wordcount         : "X"
+
+figsintext        : no
+fig_caption       : yes
+
+documentclass     : "apa7"
+classoption       : "man"
+output: 
+  papaja::apa6_docx:
+    latex_engine: "xelatex"
+---
+---
+
+## Arima
+
+```{r}
+mainpath <- "/home/local/PSYCH-ADS/xuqian_chen/Github/effort"
+datafolder <- file.path(mainpath, "2_pipeline/out")
+arimafolder <-  file.path(mainpath, "3_output/results/arima")
+grangerfolder <-  file.path(mainpath,"3_output/results/granger")
+library(forecast)
+library(tseries)
+# Granger test
+library(lmtest)
+library(zoo)
+library(stargazer)
+# VAR
+library(vars)
+library(papaja)
+
+```
+
+```{r}
+
+dfus <- read.csv(file.path(datafolder,"merged_us.csv"))
+dfchi <- read.csv(file.path(datafolder,"merged_chi.csv"))
+
+# transform GPD per capita to log scale
+dfus$gdp_per_capita_log <- log(dfus$GDP.per.capita)
+dfchi$gdp_per_capita_log <- log(dfchi$GDP.per.capita)
+dfus$gdp_per_capita_z <- scale(dfus$gdp_per_capita_log)
+dfchi$gdp_per_capita_z <- scale(dfchi$gdp_per_capita_log)
+# loop through dependent variables to run ARIMA, granger causality, and plot
+dfus$effort <- dfus$effort_virtue - dfus$effort_vice
+dfus$efficiency <- dfus$efficiency_virtue - dfus$efficiency_vice
+dfus$InefficientEffort <- dfus$effort_virtue - dfus$efficiency_virtue
+dfchi$effort <- dfchi$effort_virtue - dfchi$effort_vice
+dfchi$efficiency <- dfchi$efficiency_virtue - dfchi$efficiency_vice
+dfchi$InefficientEffort <- dfchi$effort_virtue - dfchi$efficiency_virtue
+
+
+dfus$indi_z <- as.vector(scale(dfus$indi))
+dfchi$indi_z <-  as.vector(scale(dfchi$indi))
+dfus$coll_z <-  as.vector(scale(dfus$coll))
+dfchi$coll_z <-  as.vector(scale(dfchi$coll))
+dfus$loose_z <-  as.vector(scale(dfus$loose))
+dfchi$loose_z <-  as.vector(scale(dfchi$loose))
+dfus$tight_z <-  as.vector(scale(dfus$tight))
+dfchi$tight_z <-  as.vector(scale(dfchi$tight))
+
+gdp_var <- "gdp_per_capita_z"
+```
+
+```{r}
+# Define the function to perform ARIMA modeling
+
+perform_arima_stats <- function(data, dv, iv, nouseivname,gdp_var = NULL) {
+  x_ts <- ts(data[iv])
+  y_ts <- ts(data[dv])
+  
+  if (!is.null(gdp_var)) {
+    gdp_ts <- ts(data[[gdp_var]])
+    xreg <- cbind(gdp_ts, x_ts)
+    fit <- auto.arima(y_ts, xreg = xreg)
+    ar <- fit$arma[1]
+    ma <- fit$arma[2]
+    diff <- fit$arma[6]
+    model <- arima(y_ts, order = c(ar, diff, ma), xreg = xreg)
+    coef_val <- coef(model)['x_ts']
+    se_val <- sqrt(diag(vcov(model)))['x_ts']
+
+  } else {
+    xreg <- cbind(x_ts)
+    fit <- auto.arima(y_ts, xreg = xreg)
+    ar <- fit$arma[1]
+    ma <- fit$arma[2]
+    diff <- fit$arma[6]
+    model <- arima(y_ts, order = c(ar, diff, ma), xreg = xreg)
+    coef_val <- coef(model)[iv]
+    se_val <- sqrt(diag(vcov(model)))[iv]
+
+  }
+
+  ci_low <- coef_val - 1.96 * se_val
+  ci_high <- coef_val + 1.96 * se_val
+  p_value <- 2 * (1 - pnorm(abs(coef_val/se_val)))
+  return(list(coef = coef_val, ci_low = ci_low, ci_high = ci_high, p_value = p_value))
+}
+# Extracting and formatting values for clarity:
+format_stats <- function(model) {
+    coef <- sprintf("%.2f", model$coef)
+    ci_low <- sprintf("%.2f", model$ci_low)
+    ci_high <- sprintf("%.2f", model$ci_high)
+    p_value <- ifelse(model$p_value < 0.001, "< 0.001", sprintf("%.3f", model$p_value))
+    return(paste("(*b* = ", coef, ", 95% CI [", ci_low, ", ", ci_high, "], *p* = ", p_value, ")", sep = ""))
+}
+# Define the function to perform Granger causality test and get formatted statistics
+perform_granger_stats <- function(data, iv, dv) {
+  # Combine the series into a data frame
+  df <- data.frame(y = data[dv], x = data[iv])
+  
+  # Remove rows with NA values
+  df <- df[complete.cases(df), ]
+  
+  # Determine the best order for the VAR model using AIC
+  var_result <- VARselect(df, lag.max = 10, type = "both")
+  optimal_lag <- var_result$selection["AIC(n)"]
+  
+  # Fit the VAR model
+  var_model <- VAR(df, p = optimal_lag)
+  
+  # Perform Granger causality test using the estimated VAR model
+  granger_test <- causality(var_model, cause = iv)
+  
+  # Extract statistics
+  p_value <- granger_test$Granger$p.value
+  f_value <- granger_test$Granger$statistic[[1]]
+  df1 <- granger_test$Granger$parameter[[1]]
+  df2 <- granger_test$Granger$parameter[[2]]
+  
+  # Format for easy inclusion in text
+  p_str <- ifelse(p_value < 0.001, "< 0.001", sprintf("%.3f", p_value))
+  formatted_stats <- sprintf("(*F*(%d, %d) = %.2f, *p* = %s)", df1, df2, f_value, p_str)
+
+  # Return results
+  result <- list(optimal_lag = optimal_lag, formatted_stats = formatted_stats, p_value = p_value)
+  return(result)
+}
+
+```
+```{r}
+useffortindi <- perform_arima_stats(dfus,"effort","indi_z","Individualism",gdp_var)
+useffortcoll <- perform_arima_stats(dfus,"effort","coll_z","Collectivism",gdp_var)
+useffortloose <- perform_arima_stats(dfus,"effort","loose_z","Looseness",gdp_var)
+usefforttight <- perform_arima_stats(dfus,"effort","tight_z","Tightness",gdp_var)
+usefficiencyindi <- perform_arima_stats(dfus,"efficiency","indi_z","Individualism",gdp_var)
+usefficiencycoll <- perform_arima_stats(dfus,"efficiency","coll_z","Collectivism",gdp_var)
+usefficiencyloose <- perform_arima_stats(dfus,"efficiency","loose_z","Looseness",gdp_var)
+usefficiencytight <- perform_arima_stats(dfus,"efficiency","tight_z","Tightness",gdp_var)
+usInefficientEffortindi <- perform_arima_stats(dfus,"InefficientEffort","indi_z","Individualism",gdp_var)
+usInefficientEffortcoll <- perform_arima_stats(dfus,"InefficientEffort","coll_z","Collectivism",gdp_var)
+usInefficientEffortloose <- perform_arima_stats(dfus,"InefficientEffort","loose_z","Looseness",gdp_var)
+usInefficientEfforttight <- perform_arima_stats(dfus,"InefficientEffort","tight_z","Tightness",gdp_var)
+
+useffortindi_noGDP <- perform_arima_stats(dfus,"effort","indi_z","Individualism")
+useffortcoll_noGDP <- perform_arima_stats(dfus,"effort","coll_z","Collectivism")
+useffortloose_noGDP <- perform_arima_stats(dfus,"effort","loose_z","Looseness")
+usefforttight_noGDP <- perform_arima_stats(dfus,"effort","tight_z","Tightness")
+usefficiencyindi_noGDP <- perform_arima_stats(dfus,"efficiency","indi_z","Individualism")
+usefficiencycoll_noGDP <- perform_arima_stats(dfus,"efficiency","coll_z","Collectivism")
+usefficiencyloose_noGDP <- perform_arima_stats(dfus,"efficiency","loose_z","Looseness")
+usefficiencytight_noGDP <- perform_arima_stats(dfus,"efficiency","tight_z","Tightness")
+usInefficientEffortindi_noGDP <- perform_arima_stats(dfus,"InefficientEffort","indi_z","Individualism")
+usInefficientEffortcoll_noGDP <- perform_arima_stats(dfus,"InefficientEffort","coll_z","Collectivism")
+usInefficientEffortloose_noGDP <- perform_arima_stats(dfus,"InefficientEffort","loose_z","Looseness")
+usInefficientEfforttight_noGDP <- perform_arima_stats(dfus,"InefficientEffort","tight_z","Tightness")
+
+
+chieffortindi <- perform_arima_stats(dfchi,"effort","indi_z","Individualism",gdp_var)
+chieffortcoll <- perform_arima_stats(dfchi,"effort","coll_z","Collectivism",gdp_var)
+chieffortloose <- perform_arima_stats(dfchi,"effort","loose_z","Looseness",gdp_var)
+chiefforttight <- perform_arima_stats(dfchi,"effort","tight_z","Tightness",gdp_var)
+chiefficiencyindi <- perform_arima_stats(dfchi,"efficiency","indi_z","Individualism",gdp_var)
+chiefficiencycoll <- perform_arima_stats(dfchi,"efficiency","coll_z","Collectivism",gdp_var)
+chiefficiencyloose <- perform_arima_stats(dfchi,"efficiency","loose_z","Looseness",gdp_var)
+chiefficiencytight <- perform_arima_stats(dfchi,"efficiency","tight_z","Tightness",gdp_var)
+chiInefficientEffortindi <- perform_arima_stats(dfchi,"InefficientEffort","indi_z","Individualism",gdp_var)
+chiInefficientEffortcoll <- perform_arima_stats(dfchi,"InefficientEffort","coll_z","Collectivism",gdp_var)
+chiInefficientEffortloose <- perform_arima_stats(dfchi,"InefficientEffort","loose_z","Looseness",gdp_var)
+chiInefficientEfforttight <- perform_arima_stats(dfchi,"InefficientEffort","tight_z","Tightness",gdp_var)
+
+chieffortindi_noGDP <- perform_arima_stats(dfchi,"effort","indi_z","Individualism")
+chieffortcoll_noGDP <- perform_arima_stats(dfchi,"effort","coll_z","Collectivism")
+chieffortloose_noGDP <- perform_arima_stats(dfchi,"effort","loose_z","Looseness")
+chiefforttight_noGDP <- perform_arima_stats(dfchi,"effort","tight_z","Tightness")
+chiefficiencyindi_noGDP <- perform_arima_stats(dfchi,"efficiency","indi_z","Individualism")
+chiefficiencycoll_noGDP <- perform_arima_stats(dfchi,"efficiency","coll_z","Collectivism")
+chiefficiencyloose_noGDP <- perform_arima_stats(dfchi,"efficiency","loose_z","Looseness")
+chiefficiencytight_noGDP <- perform_arima_stats(dfchi,"efficiency","tight_z","Tightness")
+chiInefficientEffortindi_noGDP <- perform_arima_stats(dfchi,"InefficientEffort","indi_z","Individualism")
+chiInefficientEffortcoll_noGDP <- perform_arima_stats(dfchi,"InefficientEffort","coll_z","Collectivism")
+chiInefficientEffortloose_noGDP <- perform_arima_stats(dfchi,"InefficientEffort","loose_z","Looseness")
+chiInefficientEfforttight_noGDP <- perform_arima_stats(dfchi,"InefficientEffort","tight_z","Tightness")
+
+# granger
+grangeruseffortindi <- perform_granger_stats(dfus,"effort","indi_z")
+grangerusindieffort <- perform_granger_stats(dfus,"indi_z","effort")
+grangeruseffortcoll <- perform_granger_stats(dfus,"effort","coll_z")
+grangeruscolleffort <- perform_granger_stats(dfus,"coll_z","effort")
+grangeruseffortloose <- perform_granger_stats(dfus,"effort","loose_z")
+grangeruslooseeffort <- perform_granger_stats(dfus,"loose_z","effort")
+grangerusefforttight <- perform_granger_stats(dfus,"effort","tight_z")
+grangerustighteffort <- perform_granger_stats(dfus,"tight_z","effort")
+grangerusefficiencyindi <- perform_granger_stats(dfus,"efficiency","indi_z")
+grangerusindiefficiency <- perform_granger_stats(dfus,"indi_z","efficiency")
+grangerusefficiencycoll <- perform_granger_stats(dfus,"efficiency","coll_z")
+grangeruscollefficiency <- perform_granger_stats(dfus,"coll_z","efficiency")
+grangerusefficiencyloose <- perform_granger_stats(dfus,"efficiency","loose_z")
+grangeruslooseefficiency <- perform_granger_stats(dfus,"loose_z","efficiency")
+grangerusefficiencytight <- perform_granger_stats(dfus,"efficiency","tight_z")
+grangerustightefficiency <- perform_granger_stats(dfus,"tight_z","efficiency")
+grangerusInefficientEffortindi <- perform_granger_stats(dfus,"InefficientEffort","indi_z")
+grangerusindiInefficientEffort <- perform_granger_stats(dfus,"indi_z","InefficientEffort")
+grangerusInefficientEffortcoll <- perform_granger_stats(dfus,"InefficientEffort","coll_z")
+grangeruscollInefficientEffort <- perform_granger_stats(dfus,"coll_z","InefficientEffort")
+grangerusInefficientEffortloose <- perform_granger_stats(dfus,"InefficientEffort","loose_z")
+grangeruslooseInefficientEffort <- perform_granger_stats(dfus,"loose_z","InefficientEffort")
+grangerusInefficientEfforttight <- perform_granger_stats(dfus,"InefficientEffort","tight_z")
+grangerustightInefficientEffort <- perform_granger_stats(dfus,"tight_z","InefficientEffort")
+
+grangerchieffortindi <- perform_granger_stats(dfchi,"effort","indi_z")
+grangerchiindieffort <- perform_granger_stats(dfchi,"indi_z","effort")
+grangerchieffortcoll <- perform_granger_stats(dfchi,"effort","coll_z")
+grangerchicolleffort <- perform_granger_stats(dfchi,"coll_z","effort")
+grangerchieffortloose <- perform_granger_stats(dfchi,"effort","loose_z")
+grangerchilooseeffort <- perform_granger_stats(dfchi,"loose_z","effort")
+grangerchiefforttight <- perform_granger_stats(dfchi,"effort","tight_z")
+grangerchitighteffort <- perform_granger_stats(dfchi,"tight_z","effort")
+grangerchiefficiencyindi <- perform_granger_stats(dfchi,"efficiency","indi_z")
+grangerchiindiefficiency <- perform_granger_stats(dfchi,"indi_z","efficiency")
+grangerchiefficiencycoll <- perform_granger_stats(dfchi,"efficiency","coll_z")
+grangerchicollefficiency <- perform_granger_stats(dfchi,"coll_z","efficiency")
+grangerchiefficiencyloose <- perform_granger_stats(dfchi,"efficiency","loose_z")
+grangerchilooseefficiency <- perform_granger_stats(dfchi,"loose_z","efficiency")
+grangerchiefficiencytight <- perform_granger_stats(dfchi,"efficiency","tight_z")
+grangerchitightefficiency <- perform_granger_stats(dfchi,"tight_z","efficiency")
+grangerchiInefficientEffortindi <- perform_granger_stats(dfchi,"InefficientEffort","indi_z")
+grangerchiindiInefficientEffort <- perform_granger_stats(dfchi,"indi_z","InefficientEffort")
+grangerchiInefficientEffortcoll <- perform_granger_stats(dfchi,"InefficientEffort","coll_z")
+grangerchicollInefficientEffort <- perform_granger_stats(dfchi,"coll_z","InefficientEffort")
+grangerchiInefficientEffortloose <- perform_granger_stats(dfchi,"InefficientEffort","loose_z")
+grangerchilooseInefficientEffort <- perform_granger_stats(dfchi,"loose_z","InefficientEffort")
+grangerchiInefficientEfforttight <- perform_granger_stats(dfchi,"InefficientEffort","tight_z")
+grangerchitightInefficientEffort <- perform_granger_stats(dfchi,"tight_z","InefficientEffort")
+
+```
+
+## ARIMA Models: US Congressional Speeches
+
+- Individualism predicts effort without GDP: `r format_stats(useffortindi_noGDP)`, controlling for GDP:`r format_stats(useffortindi)`
+- Collectivism predicts effort without GDP: `r format_stats(useffortcoll_noGDP)`, controlling for GDP:`r format_stats(useffortcoll)`
+- Looseness predicts effort without GDP: `r format_stats(useffortloose_noGDP)`, controlling for GDP:`r format_stats(useffortloose)`
+- Tightness predicts effort without GDP: `r format_stats(usefforttight_noGDP)`, controlling for GDP:`r format_stats(usefforttight)`
+
+- Individualism predicts efficiency without GDP: `r format_stats(usefficiencyindi_noGDP)`, controlling for GDP:`r format_stats(usefficiencyindi)`
+- Collectivism predicts efficiency without GDP: `r format_stats(usefficiencycoll_noGDP)`, controlling for GDP:`r format_stats(usefficiencycoll)`
+- Looseness predicts efficiency without GDP: `r format_stats(usefficiencyloose_noGDP)`, controlling for GDP:`r format_stats(usefficiencyloose)`
+- Tightness predicts efficiency without GDP: `r format_stats(usefficiencytight_noGDP)`, controlling for GDP:`r format_stats(usefficiencytight)`
+
+- Individualism predicts inefficient effort without GDP: `r format_stats(usInefficientEffortindi_noGDP)`, controlling for GDP:`r format_stats(usInefficientEffortindi)`
+- Collectivism predicts inefficient effort without GDP: `r format_stats(usInefficientEffortcoll_noGDP)`, controlling for GDP:`r format_stats(usInefficientEffortcoll)`
+- Looseness predicts inefficient effort without GDP: `r format_stats(usInefficientEffortloose_noGDP)`, controlling for GDP:`r format_stats(usInefficientEffortloose)`
+- Tightness predicts inefficient effort without GDP: `r format_stats(usInefficientEfforttight_noGDP)`, controlling for GDP:`r format_stats(usInefficientEfforttight)`
+
+## ARIMA Models: People’s Daily of China
+
+- Individualism predicts effort without GDP: `r format_stats(chieffortindi_noGDP)`, controlling for GDP:`r format_stats(chieffortindi)`
+- Collectivism predicts effort without GDP: `r format_stats(chieffortcoll_noGDP)`, controlling for GDP:`r format_stats(chieffortcoll)`
+- Looseness predicts effort without GDP: `r format_stats(chieffortloose_noGDP)`, controlling for GDP:`r format_stats(chieffortloose)`
+- Tightness predicts effort without GDP: `r format_stats(chiefforttight_noGDP)`, controlling for GDP:`r format_stats(chiefforttight)`
+
+- Individualism predicts efficiency without GDP: `r format_stats(chiefficiencyindi_noGDP)`, controlling for GDP:`r format_stats(chiefficiencyindi)`
+- Collectivism predicts efficiency without GDP: `r format_stats(chiefficiencycoll_noGDP)`, controlling for GDP:`r format_stats(chiefficiencycoll)`
+- Looseness predicts efficiency without GDP: `r format_stats(chiefficiencyloose_noGDP)`, controlling for GDP:`r format_stats(chiefficiencyloose)`
+- Tightness predicts efficiency without GDP: `r format_stats(chiefficiencytight_noGDP)`, controlling for GDP:`r format_stats(chiefficiencytight)`
+
+- Individualism predicts inefficient effort without GDP: `r format_stats(chiInefficientEffortindi_noGDP)`, controlling for GDP:`r format_stats(chiInefficientEffortindi)`
+- Collectivism predicts inefficient effort without GDP: `r format_stats(chiInefficientEffortcoll_noGDP)`, controlling for GDP:`r format_stats(chiInefficientEffortcoll)`
+- Looseness predicts inefficient effort without GDP: `r format_stats(chiInefficientEffortloose_noGDP)`, controlling for GDP:`r format_stats(chiInefficientEffortloose)`
+- Tightness predicts inefficient effort without GDP: `r format_stats(chiInefficientEfforttight_noGDP)`, controlling for GDP:`r format_stats(chiInefficientEfforttight)`
+
+## Granger Tests: US Congressional Speeches
+- Individualism causes Effort: `r grangerusindieffort$formatted_stats` 
+- Effort causes Individualism: `r grangeruseffortindi$formatted_stats` 
+- Collectivism cuases Effort: `r grangeruscolleffort$formatted_stats` 
+- Effort causes Collectivism `r grangeruseffortcoll$formatted_stats` 
+- Looseness causes Effort: `r grangeruslooseeffort$formatted_stats`
+- Effort causes Looseness: `r grangeruseffortloose$formatted_stats`
+- Tightness causes Effort: `r grangerustighteffort$formatted_stats`
+- Effort causes Tightness: `r grangerusefforttight$formatted_stats`
+
+- Individualism causes Efficiency: `r grangerusindiefficiency$formatted_stats`
+- Efficiency causes Individualism: `r grangerusefficiencyindi$formatted_stats`
+- Collectivism cuases  Efficiency: `r grangeruscollefficiency$formatted_stats`
+- Efficiency causes Collectivism `r grangerusefficiencycoll$formatted_stats`
+- Looseness causes Efficiency: `r grangeruslooseefficiency$formatted_stats`
+- Efficiency causes Looseness: `r grangerusefficiencyloose$formatted_stats`
+- Tightness causes Efficiency: `r grangerustightefficiency$formatted_stats`
+
+- Individualism causes Inefficient Effort: `r grangerusindiInefficientEffort$formatted_stats`
+- Inefficient Effort causes Individualism: `r grangerusInefficientEffortindi$formatted_stats`
+- Collectivism cuases  Inefficient Effort: `r grangeruscollInefficientEffort$formatted_stats`
+- Inefficient Effort causes Collectivism `r grangerusInefficientEffortcoll$formatted_stats`
+- Looseness causes Inefficient Effort: `r grangeruslooseInefficientEffort$formatted_stats`
+- Inefficient Effort causes Looseness: `r grangerusInefficientEffortloose$formatted_stats`
+- Tightness causes Inefficient Effort: `r grangerustightInefficientEffort$formatted_stats`
+
+## Granger Tests: People’s Daily of China
+- Individualism causes Effort: `r grangerchiindieffort$formatted_stats`
+- Effort causes Individualism: `r grangerchieffortindi$formatted_stats`
+- Collectivism cuases Effort: `r grangerchicolleffort$formatted_stats`
+- Effort causes Collectivism `r grangerchieffortcoll$formatted_stats`
+- Looseness causes Effort: `r grangerchilooseeffort$formatted_stats`
+- Effort causes Looseness: `r grangerchieffortloose$formatted_stats`
+- Tightness causes Effort: `r grangerchitighteffort$formatted_stats`
+- Effort causes Tightness: `r grangerchiefforttight$formatted_stats`
+
+- Individualism causes Efficiency: `r grangerchiindiefficiency$formatted_stats`
+- Efficiency causes Individualism: `r grangerchiefficiencyindi$formatted_stats`
+- Collectivism cuases  Efficiency: `r grangerchicollefficiency$formatted_stats`
+- Efficiency causes Collectivism `r grangerchiefficiencycoll$formatted_stats`
+- Looseness causes Efficiency: `r grangerchilooseefficiency$formatted_stats`
+- Efficiency causes Looseness: `r grangerchiefficiencyloose$formatted_stats`
+- Tightness causes Efficiency: `r grangerchitightefficiency$formatted_stats`
+
+- Individualism causes Inefficient Effort: `r grangerchiindiInefficientEffort$formatted_stats`
+- Inefficient Effort causes Individualism: `r grangerchiInefficientEffortindi$formatted_stats`
+- Collectivism cuases  Inefficient Effort: `r grangerchicollInefficientEffort$formatted_stats`
+- Inefficient Effort causes Collectivism `r grangerchiInefficientEffortcoll$formatted_stats`
+- Looseness causes Inefficient Effort: `r grangerchilooseInefficientEffort$formatted_stats`
+- Inefficient Effort causes Looseness: `r grangerchiInefficientEffortloose$formatted_stats`
+- Tightness causes Inefficient Effort: `r grangerchitightInefficientEffort$formatted_stats`
