@@ -1,6 +1,9 @@
+<<<<<<< HEAD
 # ignore the null intermediate files as they exceed 50 MB limit of github
 2_pipeline/tmp/*
 
+=======
+>>>>>>> ea146cd3c35bdc8a90d1bf1d59fb1a013afdc7b3
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
