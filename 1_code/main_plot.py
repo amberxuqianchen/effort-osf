@@ -10,7 +10,6 @@ nullresults_folder_path =os.path.join(os.path.dirname(script_dir),'2_pipeline/tm
 
 null_folder_path = os.path.join(tmp_folder_path, 'null_association')
 # nullresults_folder_path = os.path.join(os.path.dirname(script_dir),'3_output', 'results','null_association')
-nullresults_folder_path =os.path.join(os.path.dirname(script_dir),'2_pipeline/tmp')
 nullplot_folder_path = os.path.join(os.path.dirname(script_dir),'3_output', 'plot','null_association')
 if not os.path.exists(null_folder_path):
     os.makedirs(null_folder_path)
@@ -27,25 +26,24 @@ def load_null_association(savename):
 # US Congress
 us_null_filepath = os.path.join(nullresults_folder_path, 'us_trueword10000_all.csv"')
 # if os.path.exists(us_null_filepath):
-# dfusnull_final = pd.read_csv('/home/local/PSYCH-ADS/xuqian_chen/Github/effort-osf/2_pipeline/tmp/us_trueword10000_all.csv')
+dfusnull_final = pd.read_csv(os.path.join(nullresults_folder_path,'us_trueword10000_all.csv'))
 # else:
 #     # Models
 #     # model_folder_path = os.path.join(data_folder_path, 'model')
-model_folder_path = '/home/local/PSYCH-ADS/xuqian_chen/YES_lab/Amber/nlp/Congress/model' #change to your own path
-models = load_word2vec_models(model_folder_path)
-
-null_lists = generate_random_words(foundations, 10000, models, tmp_folder_path, 'foundaiton_word10000',False)
-dfusnull_final = calculate_null_association(models, targets, foundations, null_lists,'us_trueword10000')
+# model_folder_path = '/home/local/PSYCH-ADS/xuqian_chen/YES_lab/Amber/nlp/Congress/model' #change to your own path
+# models = load_word2vec_models(model_folder_path)
+# null_lists = generate_random_words(foundations, 10000, models, tmp_folder_path, 'foundaiton_word10000',False)
+# dfusnull_final = calculate_null_association(models, targets, foundations, null_lists,'us_trueword10000')
 
 # China's People's Daily
 chi_null_filepath = os.path.join(nullresults_folder_path, 'null10000_chi_all.csv')
 # if os.path.exists(chi_null_filepath):
-# dfchinull_final = pd.read_csv(chi_null_filepath)
+dfchinull_final = pd.read_csv(chi_null_filepath)
 # else:
-model_chi_folder_path = '/home/local/PSYCH-ADS/xuqian_chen/Github/agebias-chi/0_data/model' #change to your own path
-models_chi = load_word2vec_models(model_chi_folder_path)
-null_lists_chi = generate_random_words(foundations_chi, 10000, models_chi, tmp_folder_path, 'foundaiton_chi_word10000',False)
-dfchinanull_final = calculate_null_association(models_chi, targets_chi, foundations_chi, null_lists_chi,'china_trueword10000')
+# model_chi_folder_path = '/home/local/PSYCH-ADS/xuqian_chen/Github/agebias-chi/0_data/model' #change to your own path
+# models_chi = load_word2vec_models(model_chi_folder_path)
+# null_lists_chi = generate_random_words(foundations_chi, 10000, models_chi, tmp_folder_path, 'foundaiton_chi_word10000',False)
+# dfchinanull_final = calculate_null_association(models_chi, targets_chi, foundations_chi, null_lists_chi,'china_trueword10000')
 dfus = pd.read_csv(os.path.join(pipeline_folder_path,'foundations_us.csv'))
 dfus['efficiency_diff'] = dfus['efficiency_virtue'] - dfus['efficiency_vice']
 dfus['effort_diff'] = dfus['effort_virtue'] - dfus['effort_vice']
