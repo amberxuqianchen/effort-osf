@@ -108,11 +108,7 @@ dfchi = pd.read_csv(os.path.join(pipeline_folder_path,'foundations_chi.csv'))
 dfchinull_final['effort_diff'] = dfchinull_final['effort_virtue'] - dfchinull_final['effort_vice']
 dfchinull_final['efficiency_diff'] = dfchinull_final['efficiency_virtue'] - dfchinull_final['efficiency_vice']
 dfchinull_lowerq = dfchinull_final.groupby(['year']).quantile(0.025)
-dfchinull_lowerq['effort_diff'] = dfchinull_lowerq['effort_virtue'] - dfchinull_lowerq['effort_vice']
-dfchinull_lowerq['efficiency_diff'] = dfchinull_lowerq['efficiency_virtue'] - dfchinull_lowerq['efficiency_vice']
 dfchinull_upperq = dfchinull_final.groupby(['year']).quantile(0.975)
-dfchinull_upperq['effort_diff'] = dfchinull_upperq['effort_virtue'] - dfchinull_upperq['effort_vice']
-dfchinull_upperq['efficiency_diff'] = dfchinull_upperq['efficiency_virtue'] - dfchinull_upperq['efficiency_vice']
 
 # First Plot (Effort and Efficiency)
 ax[0].plot(dfchi['year'], dfchi['effort_virtue'] - dfchi['effort_vice'], color=effort_color, label='Effort', linewidth=2)
