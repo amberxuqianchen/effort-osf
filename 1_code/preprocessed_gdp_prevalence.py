@@ -18,6 +18,9 @@ gdp_df_us = df[(df['Entity'] == 'United States') & (df['Year'] >= 1873)]
 # Prevalence data
 
 prevalence_df = pd.read_csv(os.path.join(data_folder_path,'culturalvalues_EngAme.csv'))
+# prevalence_df = pd.read_csv(os.path.join(preprocessed_folder_path,'COHA_list_frequencies_over_time.csv'))
+if 'year' not in prevalence_df.columns:
+    prevalence_df['year'] = prevalence_df['Year']
 # drop rows if year < 1873 and rename Year to year
 prevalence_df = prevalence_df[prevalence_df['year'] >= 1873]
 prevalence_df_chi = pd.read_csv(os.path.join(data_folder_path,'prevalence_chi.csv'))
@@ -27,7 +30,7 @@ prevalence_df_chi = pd.read_csv(os.path.join(data_folder_path,'prevalence_chi.cs
 external_df_chi = pd.merge(gdp_df_chi, prevalence_df, left_on='Year', right_on='year')
 external_df = pd.merge(gdp_df_us, prevalence_df, left_on='Year', right_on='year')
 # Columns to drop
-columns_to_drop = ["Entity", "Code", "417485-annotations", "Year"]
+columns_to_drop = ["Entity", "Code", "417485-annotations"]
 
 # Drop the columns
 external_df_chi = external_df_chi.drop(columns_to_drop, axis=1)
@@ -35,55 +38,27 @@ external_df = external_df.drop(columns_to_drop, axis=1)
 # Save the China data to a new csv file
 external_df_chi.to_csv(os.path.join(preprocessed_folder_path,'external_chi.csv') , index=False)
 external_df.to_csv(os.path.join(preprocessed_folder_path,'external_us.csv') , index=False)
-csv_files = glob.glob(os.path.join(preprocessed_folder_path, '*.csv'))
-csv_files_chi = [x for x in csv_files if 'chi' in x]
-csv_files_us = [x for x in csv_files if 'chi' not in x]
 
-# Create an empty list to store dataframes
-dfs = []
+# read foundations df
+foundations_df = pd.read_csv(os.path.join(preprocessed_folder_path,'foundations.csv'))
+foundations_df_chi = pd.read_csv(os.path.join(preprocessed_folder_path,'foundations_chi.csv'))
+# merge prevalence_df with foundations
+dfus = pd.merge(external_df, foundations_df, on='year', how='outer')
+dfchi = pd.merge(external_df_chi, foundations_df_chi, on='year', how='outer')
 
-# Read and append each csv file into the list
-for csv_file in csv_files_chi:
-    df = pd.read_csv(csv_file)
-    df['year'] = df['year'].astype(int)
-    dfs.append(df)
+# save
+dfus.to_csv(os.path.join(out_folder_path,'merged_us.csv') , index=False)
+dfchi.to_csv(os.path.join(out_folder_path, 'merged_chi.csv') , index=False)
 
-# Merge DataFrames
-merged_df = dfs[0]
-for df in dfs[1:]:
-    merged_df = pd.merge(merged_df, df, on='year', how='outer')
+# # Sort the merged dataframe based on 'Year'
+# merged_df = merged_df.sort_values('year')
 
-# Sort the merged dataframe based on 'Year'
-merged_df = merged_df.sort_values('year')
+# # Reset index after sorting
+# merged_df.reset_index(drop=True, inplace=True)
 
-# Reset index after sorting
-merged_df.reset_index(drop=True, inplace=True)
-
-# Write the merged dataframe to a new csv file
-merged_df.to_csv(os.path.join(out_folder_path, 'merged_chi.csv'), index=False)
-
-# Create an empty list to store dataframes
-dfs = []
-
-# Read and append each csv file into the list
-for csv_file in csv_files_us:
-    df = pd.read_csv(csv_file)
-    df['year'] = df['year'].astype(int)
-    # replace efficienci with efficiency in column names
-    df.columns = df.columns.str.replace('efficienci', 'efficiency')
-    dfs.append(df) 
-
-# Merge DataFrames
-merged_df = dfs[0]
-for df in dfs[1:]:
-    merged_df = pd.merge(merged_df, df, on='year', how='outer')
-
-# Sort the merged dataframe based on 'Year'
-merged_df = merged_df.sort_values('year')
-
-# Reset index after sorting
-merged_df.reset_index(drop=True, inplace=True)
-
-# Write the merged dataframe to a new csv file
-merged_df.to_csv(os.path.join(out_folder_path, 'merged_us.csv'), index=False)
+# # delete % from column names for COHA
+# merged_df.columns = merged_df.columns.str.replace('_%', '')
+# # Write the merged dataframe to a new csv file
+# # merged_df.to_csv(os.path.join(out_folder_path, 'merged_us.csv'), index=False)
+# merged_df.to_csv(os.path.join(out_folder_path, 'merged_us_deletemissing.csv'), index=False)
 

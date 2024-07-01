@@ -1,4 +1,4 @@
-setwd("/home/local/PSYCH-ADS/xuqian_chen/Github/effort")
+setwd("../")
 outputresult <- "./3_output/results/bcp"
 datafolder <- "./2_pipeline/tmp"
 library("bcp")

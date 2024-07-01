@@ -21,13 +21,14 @@ classoption       : "man"
 output: 
   papaja::apa6_docx:
     latex_engine: "xelatex"
+    output_dir: "../3_output/results/"
 ---
 ---
 
 ## Arima
 
 ```{r}
-mainpath <- "/home/local/PSYCH-ADS/xuqian_chen/Github/effort"
+mainpath <- "../"
 datafolder <- file.path(mainpath, "2_pipeline/out")
 arimafolder <-  file.path(mainpath, "3_output/results/arima")
 grangerfolder <-  file.path(mainpath,"3_output/results/granger")

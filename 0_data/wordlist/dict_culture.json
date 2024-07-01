@@ -1,0 +1,18 @@
+{
+    "indi": [
+      "urban", "choose", "get", "feel", "individual", "self", "unique", "child"
+    ],
+    "coll": [
+      "rural", "obliged", "give", "act", "obedience", "authority", "belong", "pray"
+    ],
+    "tight": [
+      "restrain", "prevent", "comply", "constrain", "uniformity", "adhere", "enforce", "proscribe",
+      "abide", "dictate", "circumscribe", "impose", "uphold", "discourage", "compel", "forbid",
+      "confine", "govern", "prohibit", "preclude"
+    ],
+    "loose": [
+      "allow", "freedom", "create", "variability", "autonomy", "openness", "leeway", "flexibility",
+      "broadmindedness", "transformatory", "customize", "subjectivities", "modify", "limitless",
+      "empower", "adaptiveness", "pluralism", "personalize", "encourage", "diverse"
+    ]
+  }  
