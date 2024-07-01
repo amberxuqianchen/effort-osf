@@ -1,5 +1,5 @@
 
-setwd("/home/local/PSYCH-ADS/xuqian_chen/Github/effort")
+setwd("..")
 datafolder <- "./2_pipeline/out"
 outputfolder <- "./3_output/plot/bcp"
 outputresult <- "./3_output/results/bcp"
@@ -102,3 +102,24 @@ createPlot(getPosteriorData(dfchi,"chi", "effort_efficiency_virtue"),
             "Effort - Efficiency: Virtue (China)", 
             "effort_efficiency_virtue_diff_chi.png", 
             labels=c("Effort - Efficiency"))
+
+# Validation for USSR
+outputresult <- "./3_output/results/bcp"
+datafolder <- "./2_pipeline/tmp"
+dfus <- read.csv(file.path(datafolder, "dfus_ussr.csv"))
+dfchi <- read.csv(file.path(datafolder, "dfchi_ussr.csv"))
+set.seed(101)
+# only keep year >= 1920 as USSR was established in 1922
+dfus <- dfus[dfus$year >= 1920,]
+# For US
+fit <- bcp(dfus[['SovietUnion_vir_vic_diff']])
+year_prob <- cbind(dfus$year, fit$posterior.prob,fit$posterior.mean)
+colnames(year_prob) <- c("Year", "Prob","Means")
+df_year_prob = as.data.frame(year_prob) %>% arrange(desc(Prob))
+write.csv(df_year_prob,file.path(outputresult,paste('ussr_us',".csv",sep = "")))
+# for China
+fit <- bcp(dfchi[['SovietUnion_vir_vic_diff']])
+year_prob <- cbind(dfchi$year, fit$posterior.prob,fit$posterior.mean)
+colnames(year_prob) <- c("Year", "Prob","Means")
+df_year_prob = as.data.frame(year_prob) %>% arrange(desc(Prob))
+write.csv(df_year_prob,file.path(outputresult,paste('ussr_chi',".csv",sep = "")))
