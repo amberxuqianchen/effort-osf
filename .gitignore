@@ -1,6 +1,8 @@
 # ignore the null intermediate files as they exceed 50 MB limit of github
-2_pipeline/tmp/*
+2_pipeline/tmp/null10000_chi_all.csv
 2_pipeline/tmp/us_trueword10000_all.csv
+2_pipeline/tmp/null_association/foundaiton_word10000null.json
+2_pipeline/tmp/null_association/foundation10000_chinull.json
 2_pipeline/preprocessed/congress_year.csv
 2_pipeline/preprocessed/congress_party_year.csv
 
