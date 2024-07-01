@@ -44,15 +44,13 @@ Contains all code files for model training and analysis. The code files are name
   - **12_COHA_word_frequency.py**: Analyze cultural prevalence based on COHA.
   - **13_congress_parse_speeches_year_party_parallel.py**: Parse congressional speeches in parallel.
   - **14_congress_training_year_party.py**: Train Word2Vec models on congressional speeches organized by party affiliation and year.
+  - **15_difficulty_as_improvement.py**: Calculate the cosine similarity between target words and evaluation words preset in the dictionary.
 
 ### Further Analysis in Supplementary Material
-- **15_revision_party_cor_of_arima_residual.r**: Analysis of ARIMA residuals by party correlation.
-- **16_analysis_autoarima_COHA.r**: ARIMA analysis based on COHA data.
-- **17_analysis_autoarima_deletemissing.r**: ARIMA analysis after handling missing data.
-- **18_analysis_autoarima_sentiment.r**: ARIMA analysis based on sentiment data.
-
-### Evaluation and Additional Calculations
-- **19_difficulty_as_improvement.py**: Calculate the cosine similarity between target words and evaluation words preset in the dictionary.
+- **16_revision_party_cor_of_arima_residual.r**: Analysis of ARIMA residuals by party correlation.
+- **17_analysis_autoarima_COHA.r**: ARIMA analysis based on COHA data.
+- **18_analysis_autoarima_deletemissing.r**: ARIMA analysis after handling missing data.
+- **19_analysis_autoarima_sentiment.r**: ARIMA analysis based on sentiment data.
 
 ### Function
 - **extract_cosine_similarities.py**: Calculate the cosine similarity between different words in the Word2Vec models.
