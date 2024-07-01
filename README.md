@@ -79,11 +79,12 @@ Contains final output files in the paper, including tables and figures.
 3. Run the `08_analysis_autoarima.R`. This script will generate the ARIMA Models results (Table 1 and 2) and Granger test results (Table 3 and 4), which will be saved in the `3_output/results/arima/` and `3_output/results/granger/` directories.
 4. Run the `09_generate_plots.ipynb`. This script will generate all plots saved in `3_output/replication/plots/`.
 
-### Reproducing the Word2Vec Model Training and Calculations of Word Similarities
+### Reproducing the Calculations of Word Similarities
 
 
 - Run the `04_main.py` script. This script generates the data of cosine similarities between target concepts (i.e., effort and efficiency) and moral foundations showing the trend of moral values towards effort and efficiency over time for both the U.S. and China.
-  - Trained Word2Vec models can be downloaded from [link]; note that you should change the paths of Word2Vec models to where you store the models on your local machine in the scripts if you intend to replicate the calculations of word similarities.
+  - Trained Word2Vec models can be downloaded from [link](https://ucsb.box.com/s/t1m30omvsg8biqlqdu22klv84py6d4ax); note that you should change the paths of Word2Vec models to where you store the models on your local machine in the scripts if you intend to replicate the calculations of word similarities.
+  - We encourage future researchers to utilize these trained language models to explore various topics of interest. Please ensure to appropriately cite this paper in any resulting publications.
 
 
 ### Starting from Scratch
@@ -91,9 +92,8 @@ Contains final output files in the paper, including tables and figures.
 To start from scratch, follow the instructions contained within the script files:
 
 - The raw texts of congressional speeches can be downloaded from [Stanford Congress Text Data](https://data.stanford.edu/congress_text).
-- The raw texts of People's Daily newspaper are only available upon request (email amber.chen@psych.ucsb.edu).
-- Run codes 01 ~03 to train the word2vec models.
+- The raw texts of People's Daily newspaper are only available upon request.
+- Run codes 01 ~ 03 to train the word2vec models.
 
 ## Contact
-If you encounter any issues when trying to run this analysis, feel free to reach out at amber.chen@psych.ucsb.edu.
-
+If you encounter any issues when trying to run this analysis, feel free to reach out.
