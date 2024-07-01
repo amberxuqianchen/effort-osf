@@ -1,0 +1,1 @@
+Due to large file size, data for the null model cannot be uploaded to GitHub. To fully replicate the null model results in the paper, please download the complete `tmp` folder from [OSF](https://osf.io/k9a3n?view_only=4a82d20c75614ff18980552ac290d637) and place it in the folder `2_pipeline/`.
