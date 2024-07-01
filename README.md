@@ -83,7 +83,7 @@ Contains final output files in the paper, including tables and figures.
 
 
 - Run the `04_main.py` script. This script generates the data of cosine similarities between target concepts (i.e., effort and efficiency) and moral foundations showing the trend of moral values towards effort and efficiency over time for both the U.S. and China.
-  - Trained Word2Vec models can be downloaded from [link](https://ucsb.box.com/s/t1m30omvsg8biqlqdu22klv84py6d4ax); note that you should change the paths of Word2Vec models to where you store the models on your local machine in the scripts if you intend to replicate the calculations of word similarities.
+  - Trained word2Vec models based on People's Daily of China can be downloaded from [OSF](https://osf.io/6kg9t/files/osfstorage?view_only=4a82d20c75614ff18980552ac290d637); trained word2Vec models based on People's Daily of China can be downloaded from [OSF](https://osf.io/g5kxu/files/osfstorage); note that you should change the paths of Word2Vec models to where you store the models on your local machine in the scripts.
   - We encourage future researchers to utilize these trained language models to explore various topics of interest. Please ensure to appropriately cite this paper in any resulting publications.
 
 
