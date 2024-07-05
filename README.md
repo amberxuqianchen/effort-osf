@@ -77,13 +77,13 @@ Contains final output files in the paper, including tables and figures.
 1. Clone this repository to your local machine.
 2. Navigate to the `1_code` folder using the command line or terminal.
 3. Run the `08_analysis_autoarima.R`. This script will generate the ARIMA Models results (Table 1 and 2) and Granger test results (Table 3 and 4), which will be saved in the `3_output/results/arima/` and `3_output/results/granger/` directories.
-4. Run the `09_generate_plots.ipynb`. This script will generate all plots saved in `3_output/replication/plots/`.
+4. Download tmp folder, unzip it and put it in `2_pipleline/`; Run the `09_generate_plots.ipynb`. This script will generate all plots saved in `3_output/replication/plots/`.
 
 ### Reproducing the Calculations of Word Similarities
 
 
 - Run the `04_main.py` script. This script generates the data of cosine similarities between target concepts (i.e., effort and efficiency) and moral foundations showing the trend of moral values towards effort and efficiency over time for both the U.S. and China.
-  - Trained word2Vec models based on People's Daily of China can be downloaded from [OSF](https://osf.io/6kg9t/files/osfstorage?view_only=4a82d20c75614ff18980552ac290d637); trained word2Vec models based on People's Daily of China can be downloaded from [OSF](https://osf.io/g5kxu/files/osfstorage); note that you should change the paths of Word2Vec models to where you store the models on your local machine in the scripts.
+  - Trained word2Vec models based on the U.S. congressional speeches can be downloaded from [OSF](https://osf.io/6kg9t/files/osfstorage?view_only=4a82d20c75614ff18980552ac290d637); trained word2Vec models based on People's Daily of China can be downloaded from [OSF](https://osf.io/g5kxu/files/osfstorage); note that you should change the paths of Word2Vec models to where you store the models on your local machine in the scripts.
   - We encourage future researchers to utilize these trained language models to explore various topics of interest. Please ensure to appropriately cite this paper in any resulting publications.
 
 
