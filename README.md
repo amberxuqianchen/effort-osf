@@ -1,10 +1,29 @@
-# effort-osf
+# Moral Attitudes towards Effort and Efficiency
+
 Data and analysis scripts for project "Moral attitudes towards effort and efficiency:
-A comparison between American and Chinese history"
+A comparison between American and Chinese history". This project provides a historical analysis of the evolution of moral attitudes towards effort and efficiency in U.S. and Chinese contexts. It uses Natural Language Processing to study moral bias in texts from U.S. Congressional Speeches and People's Daily of China.
 
-# README: Moral Attitudes towards Effort and Efficiency
+## Citation
 
-This project provides a historical analysis of the evolution of moral attitudes towards effort and efficiency in U.S. and Chinese contexts. It uses Natural Language Processing to study texts from U.S. Congressional Speeches and People's Daily of China.
+If you use this code or data in your research, please cite:
+
+<p style="margin-left: 2em; text-indent: -2em;">
+Chen, A. X., Sun, S., &amp; Yu, H. (2024). Moral attitudes towards effort and efficiency: A comparison between American and Chinese history. <em>Humanities and Social Sciences Communications, <span style="font-style: italic;">11</span></em>(1), 1–14. https://doi.org/10.1057/s41599-024-03603-3
+</p>
+
+### BibTeX
+```bibtex
+@article{Chen2024MoralEffortEfficiency,
+  author  = {Chen, Amber X. and Sun, Shixin and Yu, Hongbo},
+  title   = {Moral attitudes towards effort and efficiency: A comparison between American and Chinese history},
+  journal = {Humanities and Social Sciences Communications},
+  year    = {2024},
+  volume  = {11},
+  number  = {1},
+  pages   = {1--14},
+  doi     = {10.1057/s41599-024-03603-3}
+}
+```
 
 ## Getting Started
 
@@ -96,4 +115,9 @@ To start from scratch, follow the instructions contained within the script files
 - Run codes 01 ~ 03 to train the word2vec models.
 
 ## Contact
-If you encounter any issues when trying to run this analysis, feel free to reach out.
+If you encounter any issues when trying to run this analysis, feel free to reach out to me at amber.chen@psych.ucsb.edu.
+
+
+## ⭐ Star this Repository
+
+If you find this repository useful for your research, please consider giving it a star!
